@@ -29,14 +29,14 @@ export default function Restaurant() {
           <TouchableOpacity
             onPress={() => navigation.goBack()}
             style={styles.goBackButton}>
-            <Icon name="arrow-left" size={26} color={themeColors.bgColors(1)} />
+            {/* <Icon name="arrow-left" size={26} color={themeColors.bgColors(1)} /> */}
           </TouchableOpacity>
         </View>
         <View style={styles.restaurantInformationCard}>
           <View style={styles.itemsInsideCard}>
             <Text style={styles.restaurantName}>{item.name}</Text>
             <View style={styles.reviewRow}>
-              <Icon name="star" size={16} color="#ffd700" />
+              {/* <Icon name="star" size={16} color="#ffd700" /> */}
               <Text style={styles.reviewRowText}>
                 <Text style={styles.starText}>{item.stars}</Text>
                 <Text>
@@ -45,7 +45,7 @@ export default function Restaurant() {
                 </Text>
               </Text>
               <View style={styles.locationRow}>
-                <Icon name="map-pin" size={16} color="gray" />
+                {/* <Icon name="map-pin" size={16} color="gray" /> */}
                 <Text style={styles.locationRowText}>
                   Nearby · {item.address}
                 </Text>
