@@ -3,10 +3,12 @@ import { combineReducers } from "redux";
 import { persistReducer, persistStore } from "redux-persist";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { auth } from "./slice/authSlice";
+import { profile } from "./slice/profileSlice";
 
 
 const rootReducer = combineReducers({
     auth: auth.reducer,
+    profile : profile.reducer,
 })
 
 const persistConfig = {

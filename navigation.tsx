@@ -16,6 +16,7 @@ import CheckoutScreen from './screens/CheckoutScreen';
 import OrderDetailScreen from './screens/OrderDetailScreen';
 import { useSelector } from 'react-redux';
 import { RootState } from './store/store';
+import AddressScreen from './screens/AddressScreen';
 
 export type RootStackParamList = {
   Home: any;
@@ -29,6 +30,7 @@ export type RootStackParamList = {
   ProductDetail: any;
   CheckoutScreen: any;
   OrderDetail: any;
+  AddressScreen : any;
   // otras rutas
 };
 
@@ -60,10 +62,12 @@ export default function Navigation() {
                 />
                 <Stack.Screen name="History" component={HistoryScreen} />
                 <Stack.Screen name="Profile" component={ProfileScreen} />
+                <Stack.Screen name ="AddressScreen" component={AddressScreen}/>
               </> :
               <>
                 <Stack.Screen name="Login" component={LoginScreen} />
                 <Stack.Screen name="Register" component={RegisterScreen} />
+                <Stack.Screen name ="AddressScreen" component={AddressScreen}/>
               </>
           }
         </Stack.Navigator>

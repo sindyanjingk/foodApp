@@ -10,25 +10,35 @@ import {
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Feather';
 import { openWhatsApp } from '../helpers/open-wa';
+import { useDispatch } from 'react-redux';
+import { logout } from '../store/slice/authSlice';
 
 type MenuItem = {
   id: string;
   icon: string;
   label: string;
+  action? : ()=>void;
 };
 
-const menuItems: MenuItem[] = [
-  { id: '1', icon: 'user', label: 'Edit Profile' },
-  { id: '2', icon: 'lock', label: 'Change Password' },
-  { id: '3', icon: 'bell', label: 'Notifications' },
-  { id: '4', icon: 'help-circle', label: 'Help & Support' },
-  { id: '5', icon: 'info', label: 'About Us' },
-  { id: '6', icon: 'log-out', label: 'Logout' },
-];
+
 
 const ProfileScreen = () => {
+
+  const dispatch = useDispatch()
+
+  const menuItems: MenuItem[] = [
+    { id: '1', icon: 'user', label: 'Edit Profile', action : ()=>{} },
+    { id: '2', icon: 'lock', label: 'Change Password', action : ()=>{} },
+    { id: '3', icon: 'bell', label: 'Notifications', action : ()=>{} },
+    { id: '4', icon: 'help-circle', label: 'Help & Support', action : ()=>{} },
+    { id: '5', icon: 'info', label: 'About Us', action : ()=>{} },
+    { id: '6', icon: 'log-out', label: 'Logout', action : ()=>{
+      dispatch(logout())
+    } },
+  ];
+
   const renderItem: ListRenderItem<MenuItem> = ({ item, index }) => (
-    <TouchableOpacity onPress={openWhatsApp} style={[styles.item, index === menuItems.length - 1 && { borderBottomWidth: 0 }]}>
+    <TouchableOpacity onPress={item.action} style={[styles.item, index === menuItems.length - 1 && { borderBottomWidth: 0 }]}>
       <View style={styles.itemContent}>
         <Icon name={item.icon} size={20} color="#4a3aff" />
         <Text style={styles.itemText}>{item.label}</Text>

@@ -37,9 +37,6 @@ const LoginScreen = ({ navigation }: any) => {
       Alert.alert('Error', 'Semua field harus diisi');
       return;
     }
-    // Lakukan aksi login di sini
-    console.log('Email:', email);
-    console.log('Password:', password);
 
     setIsLoading(true)
     try {
@@ -48,13 +45,13 @@ const LoginScreen = ({ navigation }: any) => {
         password
       })
       Alert.alert("Berhasil", "Login berhasil")
-      if(response.status === 200) {
+      if (response.status === 200) {
         dispatch(loginSuccess(response.data))
-        navigation.navigate('Home')
+        navigation.navigate('BottomScreen')
       }
-      console.log({response : response.data});
+      console.log({ response: response.data });
     } catch (error) {
-      console.log({error});
+      console.log({ error });
       Alert.alert("Error", "Terjadi kesalahan");
     }
     setIsLoading(false)
@@ -91,13 +88,15 @@ const LoginScreen = ({ navigation }: any) => {
 
       {/* Input */}
       <View style={styles.inputContainer}>
+        {/* @ts-ignore */}
         <Icon name="user" size={20} color="#888" style={styles.inputIcon} />
-        <TextInput onChangeText={e=>setEmail(e)} placeholder="Email" style={styles.input} />
+        <TextInput onChangeText={e => setEmail(e)} placeholder="Email" style={styles.input} />
       </View>
 
       <View style={styles.inputContainer}>
+        {/* @ts-ignore */}
         <Icon name="lock" size={20} color="#888" style={styles.inputIcon} />
-        <TextInput onChangeText={e=>setPassword(e)} placeholder="Password" secureTextEntry style={styles.input} />
+        <TextInput onChangeText={e => setPassword(e)} placeholder="Password" secureTextEntry style={styles.input} />
       </View>
 
       <Text style={styles.forgotText}>Lupa Password?</Text>

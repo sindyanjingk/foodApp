@@ -5,6 +5,7 @@ import Icon from 'react-native-vector-icons/Feather';
 import HistoryScreen from './history-screen';
 import ProfileScreen from './profile-screen';
 import ChatScreen from './ChatScreen';
+import CartScreen from './CartScreen';
 
 const Tab = createBottomTabNavigator();
 
@@ -27,21 +28,21 @@ const BottomTabs = () => {
             case 'History':
               iconName = 'clock';
               break;
-            case 'Chat':
-              iconName = 'message-circle';
+            case 'Cart':
+              iconName = 'shopping-cart';
               break;
             case 'Profile':
               iconName = 'user';
               break;
           }
-
+          // @ts-ignore
           return <Icon name={iconName} size={20} color={color} />;
         },
       })}
     >
       <Tab.Screen name="Home" component={HomeScreen} />
       <Tab.Screen name="History" component={HistoryScreen} />
-      <Tab.Screen name="Chat" component={ChatScreen} />
+      <Tab.Screen name="Cart" component={CartScreen} />
       <Tab.Screen name="Profile" component={ProfileScreen} />
     </Tab.Navigator>
   );

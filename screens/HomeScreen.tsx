@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -13,50 +13,89 @@ import {
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import FoodCard from '../components/FoodCard';
-
-interface FoodItem {
-  id: string;
-  name: string;
-  image: string;
-}
-
-const dummyData: FoodItem[] = [
-  { id: '1', name: 'Chicken Masala', image: 'https://source.unsplash.com/random/100x100?dish1' },
-  { id: '2', name: 'Chicken Masala', image: 'https://source.unsplash.com/random/100x100?dish2' },
-  { id: '3', name: 'Chicken Masala', image: 'https://source.unsplash.com/random/100x100?dish3' },
-  { id: '4', name: 'Chicken Masala', image: 'https://source.unsplash.com/random/100x100?dish4' },
-];
+import HomeSkeleton from '../components/skeleton/HomeSkeleton';
+import axios from 'axios';
+import { useDispatch, useSelector } from 'react-redux';
+import { RootState } from '../store/store';
+import { setProfile } from '../store/slice/profileSlice';
+import { useNavigation } from '@react-navigation/native';
+import { TProduct } from '../types/product';
 
 const HomeScreen = () => {
   const [refreshing, setRefreshing] = useState(false);
-  const [data, setData] = useState<FoodItem[]>(dummyData);
 
-  const onRefresh = useCallback(() => {
-    setRefreshing(true);
-    // Simulate fetch
-    setTimeout(() => {
-      setData([...dummyData]); // Replace with fresh data if from API
-      setRefreshing(false);
-    }, 1500);
-  }, []);
-
-  const renderItem: ListRenderItem<FoodItem> = ({ item }) => (
-    <FoodCard name={item.name} image={item.image} />
+  const renderItem: ListRenderItem<TProduct> = ({ item }) => (
+    <FoodCard id={item.id || ""} name={item.name} image={item?.images?.url || ""} price={item.price} rating={4.5} time={"10 - 20 min"} />
   );
+
+  const navigation = useNavigation()
+  const [isLoading, setIsLoading] = useState(false);
+  const token = useSelector((state: RootState) => state.auth.token)
+  const dispatch = useDispatch()
+  const profile = useSelector((state: RootState) => state.profile)
+  const [product, setProduct] = useState<TProduct[]>([])
+
+  const getUserProfile = async () => {
+    setIsLoading(true)
+    try {
+      const response = await axios.get(`https://omjeki.vercel.app/api/profile`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      })
+      console.log({ response: response.data?.userProfile });
+      if (response.status === 200) {
+        dispatch(setProfile(response.data?.userProfile))
+      }
+    } catch (error) {
+      console.log({ error });
+    }
+    setIsLoading(false)
+  }
+
+  const getProduct = async () => {
+    setIsLoading(true)
+    try {
+      const response = await axios.get(`https://omjeki.vercel.app/api/product`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      })
+      setProduct(response.data)
+    } catch (error) {
+      console.log({ error });
+      setProduct([])
+    }
+    setIsLoading(false)
+  }
 
   const ListHeaderComponent = () => (
     <>
       {/* Header */}
       <View style={styles.header}>
-        <Image
-          source={{ uri: 'https://randomuser.me/api/portraits/women/12.jpg' }}
-          style={styles.avatar}
-        />
+        {
+          profile.avatar ?
+            <Image
+              source={{ uri: profile.avatar }}
+              style={styles.avatar}
+            /> :
+            <Image
+              source={require('../assets/avatar-placeholder.png')}
+              style={styles.avatar}
+            />
+        }
         <View>
-          <Text style={styles.greeting}>Hi Ime, mau nyari apa nih?</Text>
+          <Text style={styles.greeting}>{`Hi ${profile.name}`}</Text>
           <View style={styles.locationRow}>
+            {/* @ts-ignore */}
             <Icon name="location-on" size={16} color="#888" />
-            <Text style={styles.locationText}>23 Lubge, Abuja</Text>
+            {
+              profile?.address ?
+                <Text style={styles.locationText}>{profile.address.kelurahan || ""}</Text> :
+                <TouchableOpacity style={{ padding: 12 }} onPress={() => { console.log("Hello") }}>
+                  <Text>Tambah Alamat</Text>
+                </TouchableOpacity>
+            }
           </View>
         </View>
         {/* <Icon name="menu" size={28} style={styles.menuIcon} /> */}
@@ -64,12 +103,14 @@ const HomeScreen = () => {
 
       {/* Search */}
       <View style={styles.searchContainer}>
+        {/* @ts-ignore */}
         <Icon name="search" size={20} color="#888" />
         <TextInput
           placeholder="Search salads"
           style={styles.searchInput}
           placeholderTextColor="#888"
         />
+        {/* @ts-ignore */}
         <Icon name="tune" size={20} color="#5D3BEE" />
       </View>
 
@@ -98,19 +139,40 @@ const HomeScreen = () => {
     </>
   );
 
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    // Simulate fetch
+    setTimeout(() => {
+      getProduct()
+      getUserProfile()
+      setRefreshing(false);
+    }, 1500);
+  }, []);
+
+  useEffect(() => {
+    getUserProfile()
+    getProduct()
+  }, []);
+
   return (
     <SafeAreaView style={styles.container}>
-      <FlatList
-        data={data}
-        renderItem={renderItem}
-        keyExtractor={(item) => item.id}
-        numColumns={2}
-        columnWrapperStyle={{ justifyContent: 'space-between' }}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
-        ListHeaderComponent={ListHeaderComponent}
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 16 }}
-      />
+      {
+        isLoading ?
+          <HomeSkeleton />
+          :
+          <FlatList
+            data={product}
+            renderItem={renderItem || []}
+            keyExtractor={(item) => item.id}
+            numColumns={2}
+            columnWrapperStyle={{ justifyContent: 'space-between' }}
+            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+            ListHeaderComponent={ListHeaderComponent}
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={{ paddingBottom: 16 }}
+          />
+      }
+      {/* <HomeSkeleton/> */}
     </SafeAreaView>
   );
 };

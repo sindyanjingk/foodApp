@@ -2,28 +2,48 @@ import { useNavigation } from '@react-navigation/native';
 import React from 'react';
 import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
+import { formatIdr } from '../helpers/formatIdr';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { RootStackParamList } from '../types/types';
 
-const FoodCard = ({ name, image }: { name: string; image: string }) => {
-  const navigation = useNavigation();
+const FoodCard = ({ name, image, price, rating, time, id }: { name: string; image: string, price: number, rating: number, time: string, id: string }) => {
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   return (
-    <TouchableOpacity onPress={()=>navigation.navigate(`ProductDetail` as never)} style={styles.card}>
+    <TouchableOpacity onPress={() => navigation.navigate(`ProductDetail`, {
+      name,
+      image,
+      price,
+      rating,
+      time,
+      id
+    })} style={styles.card}>
       <TouchableOpacity style={styles.heartIcon}>
+        {/* @ts-ignore */}
         <Icon name="favorite-border" size={20} color="#000" />
       </TouchableOpacity>
 
-      <Image
-        source={require('../assets/foods/kwetiau.png')}
-        style={styles.foodImage}
-      />
+      {
+        image ?
+          <Image
+            source={{ uri: image }}
+            style={styles.foodImage}
+          /> :
+          <Image
+            source={require('../assets/foods/kwetiau.png')}
+            style={styles.foodImage}
+          />
+      }
       <Text style={styles.name}>{name}</Text>
       <View style={styles.infoRow}>
-        <Text style={styles.time}>20min</Text>
+        <Text style={styles.time}>{time || ""}</Text>
+        {/* @ts-ignore */}
         <Icon name="star" size={16} color="#FFD700" />
-        <Text style={styles.rating}>4.5</Text>
+        <Text style={styles.rating}>{rating || ""}</Text>
       </View>
       <View style={styles.cardFooter}>
-        <Text style={styles.price}>$20.50</Text>
+        <Text style={styles.price}>{formatIdr(price || 0)}</Text>
         <TouchableOpacity style={styles.addButton}>
+          {/* @ts-ignore */}
           <Icon name="add" size={18} color="#fff" />
         </TouchableOpacity>
       </View>

@@ -7,21 +7,42 @@ import {
   TouchableOpacity,
   ScrollView,
   Alert,
+  FlatList,
+  Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-import { useNavigation } from '@react-navigation/native';
+import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
+import { useSelector } from 'react-redux';
+import { RootState } from '../store/store';
+import { RootStackParamList } from '../types/types';
+import { formatIdr } from '../helpers/formatIdr';
+
+type CheckoutScreenProp = RouteProp<RootStackParamList, 'CheckoutScreen'>;
 
 const CheckoutScreen = () => {
-  const [name, setName] = useState('');
-  const [address, setAddress] = useState('');
-  const [paymentMethod, setPaymentMethod] = useState<'card' | 'cod'>('card');
+  const profile = useSelector((state: RootState) => state.profile)
+
+  const route = useRoute<CheckoutScreenProp>();
+  const { cart } = route.params
+  const total = cart.reduce(
+    (sum, item) => sum + item.productId.price * item.quantity,
+    0,
+  );
+
+  const ongkir = 5000
+
+  const [name, setName] = useState(profile.name);
+  const [paymentMethod, setPaymentMethod] = useState<'card' | 'cod'>('cod');
 
   const navigation = useNavigation();
 
   const handlePlaceOrder = () => {
-    if (!name || !address) {
-      return Alert.alert('Error', 'Please fill in all fields.');
+    if (!name) {
+      return Alert.alert('Error', 'Form harus lengkap.');
+    }
+    if(!profile.address){
+      return Alert.alert('Error', 'Silaahkan isi alamat terlebih dahulu.');
     }
     Alert.alert('Success', 'Your order has been placed!');
   };
@@ -30,76 +51,94 @@ const CheckoutScreen = () => {
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
+          {/* @ts-ignore */}
           <Icon name="arrow-back" size={24} color="#000" />
         </TouchableOpacity>
         <Text style={styles.title}>Checkout</Text>
         <View style={{ width: 24 }} />
       </View>
 
-      <ScrollView
-        contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 40 }}
-        showsVerticalScrollIndicator={false}
-      >
-        <Text style={styles.label}>Full Name</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="Enter your name"
-          value={name}
-          onChangeText={setName}
-        />
-
-        <Text style={styles.label}>Shipping Address</Text>
-        <TextInput
-          style={[styles.input, { height: 100 }]}
-          placeholder="Enter your address"
-          multiline
-          value={address}
-          onChangeText={setAddress}
-        />
-
-        <Text style={styles.label}>Payment Method</Text>
-        <View style={styles.paymentOptions}>
-          <TouchableOpacity
-            style={[
-              styles.paymentButton,
-              paymentMethod === 'card' && styles.paymentSelected,
-            ]}
-            onPress={() => setPaymentMethod('card')}
-          >
-            <Text
-              style={
-                paymentMethod === 'card'
-                  ? styles.paymentTextSelected
-                  : styles.paymentText
+      <FlatList
+        data={cart || []}
+        renderItem={({ item, index }) => (
+          <View style={{ width: '90%', alignSelf: 'center', marginBottom: 12 }} key={index}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+              {
+                item.productId.images ?
+                  <Image
+                    source={{ uri: item.productId.images.url }}
+                    style={styles.foodImage}
+                  /> :
+                  <Image
+                    source={require('../assets/foods/kwetiau.png')}
+                    style={styles.foodImage}
+                  />
               }
-            >
-              Credit/Debit Card
-            </Text>
-          </TouchableOpacity>
+              <View>
+                <Text style={styles.paymentDetail}>{`${item.productId.name} X ${item.quantity}`}</Text>
+                <Text style={styles.paymentDetail}>{formatIdr(+item.productId.price * +item.quantity)}</Text>
+              </View>
+            </View>
+          </View>
+        )}
+        ListHeaderComponent={() => (
+          <View style={{ width: '90%', alignSelf: 'center', marginBottom: 20 }}>
+            <Text style={styles.label}>Nama Penerima</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Enter your name"
+              value={name}
+              onChangeText={setName}
+            />
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 20 }}>
+              {/* @ts-ignore */}
+              <Icon name="location-on" size={16} color="#888" />
+              <Text style={{ fontSize: 16, fontWeight: '500' }}>Alamat Pengiriman</Text>
+            </View>
+            {
+              profile.address?.id ?
+                <Text style={styles.label}>Kabupaten</Text> :
+                <TouchableOpacity onPress={()=>navigation.navigate("AddressScreen" as never)} style={styles.orderButton}>
+                  <Text style={styles.orderText}>Tambah Alamat</Text>
+                </TouchableOpacity>
+            }
+            <Text >{profile.address?.kabupaten || ""}</Text>
+          </View>
+        )}
+        ListFooterComponent={() => (
+          <View style={{ width: '90%', alignSelf: 'center', marginBottom: 20 }}>
+            <Text style={styles.paymentDetail}>{`Total Product: ${formatIdr(+total)}`}</Text>
+            <Text style={styles.paymentDetail}>{`Ongkos Kirim : ${formatIdr(ongkir)}`}</Text>
+            <Text style={styles.paymentDetail}>{`Total Pembayaran: ${formatIdr(+total + ongkir)}`}</Text>
 
-          <TouchableOpacity
-            style={[
-              styles.paymentButton,
-              paymentMethod === 'cod' && styles.paymentSelected,
-            ]}
-            onPress={() => setPaymentMethod('cod')}
-          >
-            <Text
-              style={
-                paymentMethod === 'cod'
-                  ? styles.paymentTextSelected
-                  : styles.paymentText
-              }
-            >
-              Cash on Delivery
-            </Text>
-          </TouchableOpacity>
-        </View>
+            <Text style={styles.label}>Metode Pembayaran</Text>
+            <View style={styles.paymentOptions}>
+              <TouchableOpacity
+                style={[
+                  styles.paymentButton,
+                  paymentMethod === 'cod' && styles.paymentSelected,
+                ]}
+                onPress={() => setPaymentMethod('cod')}
+              >
+                <Text
+                  style={
+                    paymentMethod === 'cod'
+                      ? styles.paymentTextSelected
+                      : styles.paymentText
+                  }
+                >
+                  Cash on Delivery
+                </Text>
+              </TouchableOpacity>
+            </View>
 
-        <TouchableOpacity style={styles.orderButton} onPress={handlePlaceOrder}>
-          <Text style={styles.orderText}>Place Order</Text>
-        </TouchableOpacity>
-      </ScrollView>
+            <TouchableOpacity style={[styles.orderButton]} onPress={handlePlaceOrder}>
+              <Text style={styles.orderText}>Pesan Sekarang</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+      />
+
     </SafeAreaView>
   );
 };
@@ -122,6 +161,11 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 24,
     fontWeight: 'bold',
+  },
+  paymentDetail: {
+    fontSize: 16,
+    fontWeight: '500',
+    marginHorizontal: 8,
   },
   label: {
     fontSize: 16,
@@ -173,5 +217,12 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  foodImage: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    alignSelf: 'center',
+    marginBottom: 8,
   },
 });

@@ -6,10 +6,16 @@ import {
     Image,
     TouchableOpacity,
     FlatList,
+    ActivityIndicator,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation } from '@react-navigation/native';
+import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
+import { RootStackParamList } from '../types/types';
+import { formatIdr } from '../helpers/formatIdr';
+import axios from 'axios';
+import { useSelector } from 'react-redux';
+import { RootState } from '../store/store';
 
 interface Review {
     id: string;
@@ -18,19 +24,25 @@ interface Review {
     review: string;
 }
 
+type ProductDetailRouteProp = RouteProp<RootStackParamList, 'ProductDetail'>;
+
 const ProductDetailScreen: React.FC = () => {
     const navigation = useNavigation();
+    const route = useRoute<ProductDetailRouteProp>();
+    const { name, image, price, rating, time, id } = route.params;
     const [reviews] = useState<Review[]>([
         { id: '1', username: 'John Doe', rating: 4.5, review: 'Great dish! The spices were just right.' },
         { id: '2', username: 'Jane Smith', rating: 5, review: 'Absolutely loved it! Will order again.' },
         { id: '3', username: 'Alex Brown', rating: 3.5, review: 'It was good, but I prefer less spicy.' },
     ]);
+    const [isLoading, setIsLoading] = useState(false);
 
     const renderReview = ({ item }: { item: Review }) => (
         <View style={styles.reviewContainer}>
             <Text style={styles.reviewUsername}>{item.username}</Text>
             <View style={styles.ratingRow}>
                 {[...Array(5)].map((_, index) => (
+                    //@ts-ignore
                     <Icon
                         key={index}
                         name="star"
@@ -48,14 +60,15 @@ const ProductDetailScreen: React.FC = () => {
         <View>
             {/* Details Section */}
             <View style={styles.detailsContainer}>
-                <Text style={styles.title}>Chicken Masala</Text>
+                <Text style={styles.title}>{name || ""}</Text>
                 <View style={styles.metaRow}>
-                    <Text style={styles.metaText}>20min</Text>
+                    <Text style={styles.metaText}>{time || ""}</Text>
+                    {/* @ts-ignore */}
                     <Icon name="star" size={16} color="#FFD700" />
-                    <Text style={styles.metaText}>4.5</Text>
+                    <Text style={styles.metaText}>{rating || ""}</Text>
                 </View>
 
-                <Text style={styles.price}>$20.50</Text>
+                <Text style={styles.price}>{formatIdr(price || 0)}</Text>
 
                 <Text style={styles.sectionTitle}>Description</Text>
                 <Text style={styles.description}>
@@ -69,18 +82,49 @@ const ProductDetailScreen: React.FC = () => {
         </View>
     )
 
+    const token = useSelector((state: RootState) => state.auth.token)
+
+    const handleAddTocart = async () => {
+        setIsLoading(true)
+        try {
+            const response = await axios.post(`https://omjeki.vercel.app/api/cart`, {
+                products: [{
+                    productId: id,
+                    quantity: 1
+                }]
+            }, {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            })
+            if (response.status === 200) {
+                navigation.navigate('Cart' as never)
+            }
+        } catch (error) {
+            console.log({ error });
+        }
+        setIsLoading(false)
+    };
     return (
         <SafeAreaView style={styles.container}>
             {/* Header Image */}
             <View style={styles.imageContainer}>
-                <Image
-                    source={require('../assets/foods/nasgor.png')}
-                    style={styles.mainImage}
-                />
+                {
+                    image ?
+                        <Image
+                            source={{ uri: image }}
+                            style={styles.mainImage}
+                        /> :
+                        <Image
+                            source={require('../assets/foods/nasgor.png')}
+                            style={styles.mainImage}
+                        />
+                }
                 <TouchableOpacity
                     style={styles.backButton}
                     onPress={() => navigation.goBack()}
                 >
+                    {/* @ts-ignore */}
                     <Icon name="arrow-back" size={24} color="#000" />
                 </TouchableOpacity>
             </View>
@@ -104,12 +148,16 @@ const ProductDetailScreen: React.FC = () => {
                 marginHorizontal: 16,
             }}>
                 {/* Add to Cart Button */}
-                <TouchableOpacity onPress={()=>navigation.navigate(`CheckoutScreen` as never)} style={styles.addToCartButton}>
+                <TouchableOpacity onPress={() => navigation.navigate(`CheckoutScreen` as never)} style={styles.buyNowButton}>
                     <Text style={styles.buttonText}>Beli Sekarang</Text>
                 </TouchableOpacity>
                 {/* Add to Cart Button */}
-                <TouchableOpacity onPress={()=>navigation.navigate(`Cart` as never)} style={styles.addToCartButton}>
-                    <Text style={styles.buttonText}>Tambah Ke Keranjang</Text>
+                <TouchableOpacity onPress={handleAddTocart} style={styles.addToCartButton}>
+                    {
+                        isLoading ?
+                            <ActivityIndicator color={"#FFF"} size={"small"} /> :
+                            <Text style={styles.buttonText}>Tambah Ke Keranjang</Text>
+                    }
                 </TouchableOpacity>
             </View>
         </SafeAreaView>
@@ -212,9 +260,18 @@ const styles = StyleSheet.create({
     addToCartButton: {
         backgroundColor: '#5D3BEE',
         borderRadius: 12,
-        padding : 12, 
+        padding: 12,
         alignItems: 'center',
         margin: 8,
+        width: '56%',
+    },
+    buyNowButton: {
+        backgroundColor: '#5D3BEE',
+        borderRadius: 12,
+        padding: 12,
+        alignItems: 'center',
+        margin: 8,
+        width: '38%',
     },
     buttonText: {
         color: '#fff',

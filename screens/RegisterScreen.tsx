@@ -1,3 +1,5 @@
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import axios from 'axios';
 import React, { useState } from 'react';
 import {
@@ -12,19 +14,11 @@ import {
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Feather';
 import Fa from 'react-native-vector-icons/FontAwesome';
+import { RootStackParamList } from '../types/types';
 // import { GoogleSignin } from '@react-native-google-signin/google-signin';
 
-const RegisterScreen = ({ navigation }: any) => {
-  // const handleGoogleSignUp = async () => {
-  //   try {
-  //     await GoogleSignin.hasPlayServices();
-  //     const userInfo = await GoogleSignin.signIn();
-  //     Alert.alert('Registrasi berhasil', `Halo, ${userInfo.user.name}`);
-  //   } catch (error: any) {
-  //     Alert.alert('Gagal registrasi', error.message);
-  //   }
-  // };
-
+const RegisterScreen = () => {
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>()
   const [isLoading, setIsLoading] = useState(false);
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
@@ -50,7 +44,7 @@ const RegisterScreen = ({ navigation }: any) => {
       })
       console.log(response.data);
       Alert.alert('Berhasil', 'Registrasi berhasil');
-      navigation.navigate('Login');
+      navigation.navigate('AddressScreen', {userId : response.data?.user?.id});
     } catch (error: any) {
       console.log({ error: error?.response });
       Alert.alert("Error", error?.response?.data?.error || "Terjadi kesalahan");
@@ -81,25 +75,29 @@ const RegisterScreen = ({ navigation }: any) => {
 
       {/* Name Input */}
       <View style={styles.inputContainer}>
+        {/* @ts-ignore */}
         <Icon name="user" size={20} color="#888" style={styles.inputIcon} />
         <TextInput onChangeText={e => setUsername(e)} placeholder="Username" style={styles.input} />
       </View>
 
       {/* Email Input */}
       <View style={styles.inputContainer}>
+        {/* @ts-ignore */}
         <Icon name="mail" size={20} color="#888" style={styles.inputIcon} />
         <TextInput onChangeText={e => setEmail(e)} placeholder="Email" keyboardType="email-address" style={styles.input} />
       </View>
 
       {/* Password Input */}
       <View style={styles.inputContainer}>
+        {/* @ts-ignore */}
         <Icon name="lock" size={20} color="#888" style={styles.inputIcon} />
         <TextInput onChangeText={e => setPassword(e)} placeholder="Password" secureTextEntry style={styles.input} />
       </View>
 
       <View style={styles.inputContainer}>
+        {/* @ts-ignore */}
         <Fa name="whatsapp" size={20} color="#888" style={styles.inputIcon} />
-        <TextInput onChangeText={e => setWa(e)} placeholder="Whatsapp" style={styles.input} />
+        <TextInput keyboardType='numeric' onChangeText={e => setWa(e)} placeholder="Whatsapp" style={styles.input} />
       </View>
 
       <Text style={[styles.loginPrompt, { color: "red" }]}>*Pastikan email dan whatsapp kamu aktif ya</Text>
@@ -116,7 +114,7 @@ const RegisterScreen = ({ navigation }: any) => {
       <Text style={styles.loginPrompt}>Sudah punya akun?</Text>
 
       {/* Go to Login */}
-      <TouchableOpacity onPress={() => navigation.navigate('Login')} style={styles.loginRedirect}>
+      <TouchableOpacity onPress={() => navigation.navigate('Login' as never)} style={styles.loginRedirect}>
         <Text style={styles.loginRedirectText}>Masuk</Text>
       </TouchableOpacity>
     </View>
