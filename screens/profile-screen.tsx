@@ -10,14 +10,16 @@ import {
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Feather';
 import { openWhatsApp } from '../helpers/open-wa';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { logout } from '../store/slice/authSlice';
+import { RootState } from '../store/store';
+import UserImage from '../components/profile/UserImage';
 
 type MenuItem = {
   id: string;
   icon: string;
   label: string;
-  action? : ()=>void;
+  action?: () => void;
 };
 
 
@@ -25,38 +27,36 @@ type MenuItem = {
 const ProfileScreen = () => {
 
   const dispatch = useDispatch()
+  const profile = useSelector((state: RootState) => state.profile)
 
   const menuItems: MenuItem[] = [
-    { id: '1', icon: 'user', label: 'Edit Profile', action : ()=>{} },
-    { id: '2', icon: 'lock', label: 'Change Password', action : ()=>{} },
-    { id: '3', icon: 'bell', label: 'Notifications', action : ()=>{} },
-    { id: '4', icon: 'help-circle', label: 'Help & Support', action : ()=>{} },
-    { id: '5', icon: 'info', label: 'About Us', action : ()=>{} },
-    { id: '6', icon: 'log-out', label: 'Logout', action : ()=>{
-      dispatch(logout())
-    } },
+    { id: '1', icon: 'user', label: 'Edit Profil', action: () => { } },
+    { id: '2', icon: 'map-pin', label: 'Ubah Alamat', action: () => { } },
+    // { id: '3', icon: 'lock', label: 'Ubah Password', action: () => { } },
+    { id: '4', icon: 'help-circle', label: 'Pusat Bantuan', action: () => { } },
+    { id: '5', icon: 'info', label: 'Tentang Kami', action: () => { } },
+    {
+      id: '6', icon: 'log-out', label: 'Keluar', action: () => {
+        dispatch(logout())
+      }
+    },
   ];
 
   const renderItem: ListRenderItem<MenuItem> = ({ item, index }) => (
     <TouchableOpacity onPress={item.action} style={[styles.item, index === menuItems.length - 1 && { borderBottomWidth: 0 }]}>
       <View style={styles.itemContent}>
+        {/* @ts-ignore */}
         <Icon name={item.icon} size={20} color="#4a3aff" />
         <Text style={styles.itemText}>{item.label}</Text>
       </View>
+      {/* @ts-ignore */}
       <Icon name="chevron-right" size={20} color="#999" />
     </TouchableOpacity>
   );
 
   return (
     <View style={styles.container}>
-      <View style={styles.avatarContainer}>
-        <Image
-          source={{ uri: 'https://i.pravatar.cc/150?img=12' }}
-          style={styles.avatar}
-        />
-        <Text style={styles.name}>John Doe</Text>
-        <Text style={styles.email}>john.doe@example.com</Text>
-      </View>
+      <UserImage username={profile.name} email={profile.email} image={profile.avatar} />
 
       <FlatList
         data={menuItems}

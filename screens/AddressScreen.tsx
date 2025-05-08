@@ -145,7 +145,6 @@ const AlamatDropdown = () => {
     const navigation = useNavigation()
 
     const handleAddAddress = async () => {
-        console.log({userId, kabupaten, kecamatan, desa, keterangan, kodePos});
         setIsLoading(true)
         try {
             const response = await axios.post(`https://omjeki.vercel.app/api/address`, {
